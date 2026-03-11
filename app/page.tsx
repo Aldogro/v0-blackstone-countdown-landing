@@ -21,7 +21,7 @@ export default function Home() {
         {/* Header text */}
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-light tracking-tight text-balance">
-            Sólo falta...
+            Sólo faltan...
           </h1>
         </div>
 
