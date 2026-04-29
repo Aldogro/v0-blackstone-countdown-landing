@@ -209,11 +209,12 @@ export default function PartidosPage() {
 
   async function fetchMatches() {
     try {
-      const res = await fetch("/api/matches");
-      const data = await res.json();
+      const res = await fetch('/api/matches');
+      console.log('res', res)
+      const data = await res.json() as Match[];
       setMatches(data);
     } catch (error) {
-      console.error("Error fetching matches:", error);
+      console.error('Error fetching matches:', error);
     } finally {
       setIsLoading(false);
     }
@@ -221,7 +222,8 @@ export default function PartidosPage() {
 
   async function fetchPlayers() {
     try {
-      const res = await fetch("/api/players");
+      const res = await fetch('/api/players');
+      console.log('res', res)
       const data = await res.json();
       setPlayers(data);
     } catch (error) {
@@ -271,9 +273,9 @@ export default function PartidosPage() {
     };
 
     try {
-      const res = await fetch("/api/matches", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMatch),
       });
 

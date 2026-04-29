@@ -1,26 +1,29 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+import { redis } from "@/lib/redis";
 import { Match, MatchesData } from "@/lib/types";
 
-const DATA_FILE = path.join(process.cwd(), "data", "matches.json");
+const KEY = 'matches';
 
 async function readMatches(): Promise<MatchesData> {
   try {
-    const data = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await redis.get(KEY) as MatchesData;
+    if (!data) {
+      await redis.set(KEY, { matches: []})
+      return { matches: [] };
+    }
+    return data;
   } catch {
     return { matches: [] };
   }
 }
 
 async function writeMatches(data: MatchesData): Promise<void> {
-  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+  await redis.set(KEY, data);
 }
 
 export async function GET() {
   const data = await readMatches();
-  return NextResponse.json(data.matches);
+  return NextResponse.json(data?.matches ?? []);
 }
 
 export async function POST(request: Request) {
