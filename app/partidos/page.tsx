@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, ArrowLeft, Check, X } from "lucide-react";
+import { Plus, Pencil, ArrowLeft, Check, X, Trophy } from "lucide-react";
 import Link from "next/link";
 
 function formatResult(match: Match): string {
@@ -303,13 +303,22 @@ export default function PartidosPage() {
   return (
     <main className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-2xl md:text-3xl font-light tracking-tight">Partidos</h1>
+          </div>
+          <Link href="/bpt">
+            <Button variant="outline" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              <span className="hidden sm:inline">Puntos BPT</span>
+              <span className="sm:hidden">BPT</span>
             </Button>
           </Link>
-          <h1 className="text-2xl md:text-3xl font-light tracking-tight">Partidos</h1>
         </div>
 
         <Card className="border-border/50 bg-card/50 backdrop-blur">

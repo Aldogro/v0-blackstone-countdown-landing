@@ -379,6 +379,7 @@ export default function ScoreboardPage({
     const isTiebreak = currentSet.tiebreak !== undefined;
 
     let newMatch = { ...match };
+    let newSets = [...match.sets];
 
     if (isTiebreak && currentSet.tiebreak) {
       const tiebreak = { ...currentSet.tiebreak };
@@ -387,12 +388,53 @@ export default function ScoreboardPage({
       } else if (team === 2 && tiebreak.team2Points > 0) {
         tiebreak.team2Points--;
       }
-      newMatch.sets[match.currentSet].tiebreak = tiebreak;
+      newSets[match.currentSet] = { ...currentSet, tiebreak };
+      newMatch.sets = newSets;
     } else {
-      if (team === 1 && newMatch.currentGame.team1Points > 0) {
-        newMatch.currentGame.team1Points--;
-      } else if (team === 2 && newMatch.currentGame.team2Points > 0) {
-        newMatch.currentGame.team2Points--;
+      const points = newMatch.currentGame;
+      
+      // Check if we need to go back to previous game
+      if (team === 1 && points.team1Points === 0) {
+        // Go back to previous game if there was one
+        if (currentSet.team1Games > 0 || currentSet.team2Games > 0) {
+          // Someone has games, we can go back
+          // Determine who won the last game (reverse the last game)
+          const totalGamesInSet = currentSet.team1Games + currentSet.team2Games;
+          if (totalGamesInSet > 0) {
+            // The team that served last game was the opposite of current server
+            // We assume team 1 wants to undo, so team 1 lost the last point that won the game
+            // Go back to 40 for team 1, and we need to reduce team 1's games
+            if (currentSet.team1Games > 0) {
+              newSets[match.currentSet] = {
+                ...currentSet,
+                team1Games: currentSet.team1Games - 1,
+              };
+              newMatch.sets = newSets;
+              newMatch.currentGame = { team1Points: 3, team2Points: 0 };
+            }
+          }
+        }
+      } else if (team === 2 && points.team2Points === 0) {
+        if (currentSet.team1Games > 0 || currentSet.team2Games > 0) {
+          const totalGamesInSet = currentSet.team1Games + currentSet.team2Games;
+          if (totalGamesInSet > 0) {
+            if (currentSet.team2Games > 0) {
+              newSets[match.currentSet] = {
+                ...currentSet,
+                team2Games: currentSet.team2Games - 1,
+              };
+              newMatch.sets = newSets;
+              newMatch.currentGame = { team1Points: 0, team2Points: 3 };
+            }
+          }
+        }
+      } else {
+        // Normal subtraction within current game
+        if (team === 1 && points.team1Points > 0) {
+          newMatch.currentGame.team1Points--;
+        } else if (team === 2 && points.team2Points > 0) {
+          newMatch.currentGame.team2Points--;
+        }
       }
     }
 

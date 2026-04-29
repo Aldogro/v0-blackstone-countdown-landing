@@ -102,8 +102,8 @@
           "team1Games": 6,
           "team2Games": 6,
           "tiebreak": {
-            "team1Points": 1,
-            "team2Points": 2
+            "team1Points": 9,
+            "team2Points": 8
           }
         }
       ],
@@ -113,8 +113,10 @@
         "team1Points": 0,
         "team2Points": 0
       },
-      "status": "in-progress",
-      "createdAt": "2026-04-29T14:47:59.800Z"
+      "status": "finished",
+      "createdAt": "2026-04-29T14:47:59.800Z",
+      "winner": 1,
+      "finishedAt": "2026-04-29T14:52:22.732Z"
     }
   ]
 }
