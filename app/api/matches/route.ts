@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { team1, team2 } = body;
+  const { team1, team2, totalSets = 3 } = body;
 
   const newMatch: Match = {
     id: crypto.randomUUID(),
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     team2,
     sets: [{ team1Games: 0, team2Games: 0 }],
     currentSet: 0,
+    totalSets: totalSets as 1 | 3 | 5,
     currentGame: { team1Points: 0, team2Points: 0 },
     status: "in-progress",
     createdAt: new Date().toISOString(),

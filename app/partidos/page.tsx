@@ -58,6 +58,7 @@ export default function PartidosPage() {
     team1Player2: "",
     team2Player1: "",
     team2Player2: "",
+    totalSets: 3 as 1 | 3 | 5,
   });
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function PartidosPage() {
         player1: { name: formData.team2Player1 },
         player2: { name: formData.team2Player2 },
       },
+      totalSets: formData.totalSets,
     };
 
     try {
@@ -105,6 +107,7 @@ export default function PartidosPage() {
           team1Player2: "",
           team2Player1: "",
           team2Player2: "",
+          totalSets: 3,
         });
         router.push(`/partidos/${match.id}`);
       }
@@ -215,6 +218,23 @@ export default function PartidosPage() {
                           required
                         />
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Sets a jugar</Label>
+                    <div className="flex gap-2">
+                      {[1, 3, 5].map((num) => (
+                        <Button
+                          key={num}
+                          type="button"
+                          variant={formData.totalSets === num ? "default" : "outline"}
+                          className="flex-1"
+                          onClick={() => setFormData({ ...formData, totalSets: num as 1 | 3 | 5 })}
+                        >
+                          {num} {num === 1 ? "Set" : "Sets"}
+                        </Button>
+                      ))}
                     </div>
                   </div>
 

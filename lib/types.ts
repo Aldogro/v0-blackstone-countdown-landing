@@ -22,6 +22,7 @@ export interface Match {
   team2: Team;
   sets: SetScore[];
   currentSet: number;
+  totalSets: 1 | 3 | 5;
   currentGame: {
     team1Points: number; // 0, 15, 30, 40
     team2Points: number;

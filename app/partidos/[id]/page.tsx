@@ -16,7 +16,6 @@ import Link from "next/link";
 
 const POINTS = [0, 15, 30, 40];
 const GAMES_TO_WIN_SET = 6;
-const SETS_TO_WIN_MATCH = 2;
 
 function pointsToDisplay(points: number): string {
   if (points === 0) return "0";
@@ -76,6 +75,9 @@ export default function ScoreboardPage({
   }
 
   function checkMatchWinner(sets: typeof match.sets): 1 | 2 | null {
+    if (!match) return null;
+    
+    const setsToWin = Math.ceil(match.totalSets / 2);
     let team1Sets = 0;
     let team2Sets = 0;
 
@@ -90,8 +92,8 @@ export default function ScoreboardPage({
       }
     }
 
-    if (team1Sets >= SETS_TO_WIN_MATCH) return 1;
-    if (team2Sets >= SETS_TO_WIN_MATCH) return 2;
+    if (team1Sets >= setsToWin) return 1;
+    if (team2Sets >= setsToWin) return 2;
     return null;
   }
 
