@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
-import { Match } from "@/lib/types";
+import { Match, SetScore } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -190,7 +190,7 @@ export default function ScoreboardPage({
     }
   }
 
-  function checkMatchWinner(sets: typeof match.sets): 1 | 2 | null {
+  function checkMatchWinner(sets: SetScore[]): 1 | 2 | null {
     if (!match) return null;
 
     const setsToWin = Math.ceil(match.totalSets / 2);
@@ -220,7 +220,7 @@ export default function ScoreboardPage({
   }
 
   // Check if a team has already won the current set (not tiebreak scenario)
-  function isSetAlreadyWon(set: typeof match.sets[0]): boolean {
+  function isSetAlreadyWon(set: SetScore): boolean {
     // Set won with 2+ game difference
     if (set.team1Games >= GAMES_TO_WIN_SET && set.team1Games - set.team2Games >= 2) return true;
     if (set.team2Games >= GAMES_TO_WIN_SET && set.team2Games - set.team1Games >= 2) return true;
@@ -462,10 +462,11 @@ export default function ScoreboardPage({
     updateMatch(newMatch);
   }
 
-  async function handleSaveResult() {
+  async function handleSaveResult(match: Match) {
     if (!match || !pendingWinner) return;
 
     await updateMatch({
+      ...match,
       winner: pendingWinner,
       status: "finished",
       finishedAt: new Date().toISOString(),
@@ -731,7 +732,7 @@ export default function ScoreboardPage({
             >
               Descartar
             </Button>
-            <Button onClick={handleSaveResult} className="w-full sm:w-auto">
+            <Button onClick={() =>handleSaveResult(match)} className="w-full sm:w-auto">
               Guardar Resultado
             </Button>
           </DialogFooter>

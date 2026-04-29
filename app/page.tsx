@@ -1,4 +1,5 @@
-import { Countdown } from "@/components/countdown"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   // Target date: May 1st, 2026 at midnight
@@ -21,18 +22,29 @@ export default function Home() {
         {/* Header text */}
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-light tracking-tight text-balance">
-            Falta
+            Ya casi estás<br />
+            en Blackstone!
           </h1>
+          <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light tracking-tight text-balance">
+            <span className="text-primary">
+              Y se viene el primer<br />Blackstone Padel Tournament (BPT)!
+            </span>
+          </h3>
         </div>
-
-        {/* Countdown */}
-        <Countdown targetDate={targetDate} />
-
-        {/* Event name */}
+        <div className="text-center">
+          <Button variant="outline" className="gap-2">
+            <Link href="/partidos">
+              Ver partidos
+            </Link>
+          </Button>
+          <div className="w-16 h-1 bg-primary mx-auto my-4" />
+          <Button variant="outline" className="gap-2">
+            <Link href="/partidos">
+              Ver Puntos BPT
+            </Link>
+          </Button>
+        </div>
         <div className="text-center space-y-4">
-          <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-light tracking-tight text-balance">
-            para Blackstone
-          </h2>
           <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-muted-foreground mt-8">
             1 de Mayo, 2026
           </p>

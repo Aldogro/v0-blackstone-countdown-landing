@@ -47,3 +47,12 @@ export interface Match {
 export interface MatchesData {
   matches: Match[];
 }
+
+export interface SetScore {
+  team1Games: number;
+  team2Games: number;
+  tiebreak?: {
+    team1Points: number;
+    team2Points: number;
+  };
+}
