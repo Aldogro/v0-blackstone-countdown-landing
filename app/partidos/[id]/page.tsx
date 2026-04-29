@@ -14,7 +14,6 @@ import {
 import { Plus, Minus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-const POINTS = [0, 15, 30, 40];
 const GAMES_TO_WIN_SET = 6;
 
 function pointsToDisplay(points: number): string {
@@ -23,6 +22,48 @@ function pointsToDisplay(points: number): string {
   if (points === 2) return "30";
   if (points === 3) return "40";
   return "AD";
+}
+
+// Tennis ball SVG component
+function TennisBall({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="12" cy="12" r="10" fill="#c8e038" stroke="#a8c030" strokeWidth="1" />
+      <path
+        d="M4 12C4 12 8 8 8 4"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M4 12C4 12 8 16 8 20"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M20 12C20 12 16 8 16 4"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M20 12C20 12 16 16 16 20"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  );
 }
 
 export default function ScoreboardPage({
@@ -74,17 +115,79 @@ export default function ScoreboardPage({
     }
   }
 
+  // Calculate who is serving
+  // In regular games: service alternates every game
+  // In tiebreak: service alternates every 2 points after the first point
+  function getServingTeamAndPlayer(): { team: 1 | 2; playerIndex: 0 | 1 } | null {
+    if (!match || match.status === "finished") return null;
+
+    const currentSet = match.sets[match.currentSet];
+    const totalGamesInMatch = match.sets.reduce(
+      (acc, set) => acc + set.team1Games + set.team2Games,
+      0
+    );
+    const totalGamesInCurrentSet = currentSet.team1Games + currentSet.team2Games;
+
+    const isTiebreak =
+      currentSet.team1Games === 6 && currentSet.team2Games === 6;
+
+    if (isTiebreak && currentSet.tiebreak) {
+      // Tiebreak serving logic
+      // First point: server determined by rotation
+      // Then alternates every 2 points
+      const tiebreakPoints =
+        currentSet.tiebreak.team1Points + currentSet.tiebreak.team2Points;
+
+      // Determine initial server based on game rotation
+      const initialServerTeam: 1 | 2 = totalGamesInMatch % 2 === 0 ? 1 : 2;
+
+      // In tiebreak, after first point, service changes every 2 points
+      let servingTeam: 1 | 2;
+      if (tiebreakPoints === 0) {
+        servingTeam = initialServerTeam;
+      } else {
+        // After first point, alternate every 2 points
+        const serveBlock = Math.floor((tiebreakPoints + 1) / 2);
+        servingTeam = serveBlock % 2 === 0 ? initialServerTeam : (initialServerTeam === 1 ? 2 : 1);
+      }
+
+      // Alternate players within the team
+      const playerIndex: 0 | 1 = (Math.floor(tiebreakPoints / 2) % 2) as 0 | 1;
+
+      return { team: servingTeam, playerIndex };
+    } else {
+      // Regular game serving logic
+      // Alternate service every game, alternate players every 2 games within a team
+      const servingTeam: 1 | 2 = totalGamesInCurrentSet % 2 === 0 ? 1 : 2;
+
+      // Calculate which player is serving based on how many times this team has served
+      const team1GamesServed = Math.ceil(totalGamesInCurrentSet / 2);
+      const team2GamesServed = Math.floor(totalGamesInCurrentSet / 2);
+
+      const teamGamesServed = servingTeam === 1 ? team1GamesServed : team2GamesServed;
+      const playerIndex: 0 | 1 = (teamGamesServed % 2) as 0 | 1;
+
+      return { team: servingTeam, playerIndex };
+    }
+  }
+
   function checkMatchWinner(sets: typeof match.sets): 1 | 2 | null {
     if (!match) return null;
-    
+
     const setsToWin = Math.ceil(match.totalSets / 2);
     let team1Sets = 0;
     let team2Sets = 0;
 
     for (const set of sets) {
-      if (set.team1Games >= GAMES_TO_WIN_SET && set.team1Games - set.team2Games >= 2) {
+      if (
+        set.team1Games >= GAMES_TO_WIN_SET &&
+        set.team1Games - set.team2Games >= 2
+      ) {
         team1Sets++;
-      } else if (set.team2Games >= GAMES_TO_WIN_SET && set.team2Games - set.team1Games >= 2) {
+      } else if (
+        set.team2Games >= GAMES_TO_WIN_SET &&
+        set.team2Games - set.team1Games >= 2
+      ) {
         team2Sets++;
       } else if (set.team1Games === 7 || set.team2Games === 7) {
         if (set.team1Games > set.team2Games) team1Sets++;
@@ -326,24 +429,26 @@ export default function ScoreboardPage({
     ? currentSet.tiebreak?.team2Points ?? 0
     : match.currentGame.team2Points;
 
+  const servingInfo = getServingTeamAndPlayer();
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="absolute left-4 top-4 z-10">
+      <div className="absolute left-2 top-2 z-10 md:left-4 md:top-4">
         <Link href="/partidos">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </Link>
       </div>
 
       {/* Sets display */}
-      <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-        <div className="flex items-center gap-2 rounded-lg bg-card/80 px-4 py-2 backdrop-blur">
+      <div className="absolute left-1/2 top-2 z-10 -translate-x-1/2 md:top-4">
+        <div className="flex items-center gap-1 md:gap-2 rounded-lg bg-card/80 px-2 py-1 md:px-4 md:py-2 backdrop-blur">
           {match.sets.map((set, index) => (
             <div
               key={index}
-              className={`px-3 py-1 text-sm font-mono ${
+              className={`px-2 py-0.5 text-xs md:text-sm font-mono ${
                 index === match.currentSet
                   ? "bg-primary text-primary-foreground rounded"
                   : ""
@@ -351,101 +456,123 @@ export default function ScoreboardPage({
             >
               {set.team1Games}-{set.team2Games}
               {set.tiebreak && (
-                <span className="text-xs">
+                <span className="text-[10px] md:text-xs">
                   ({Math.min(set.tiebreak.team1Points, set.tiebreak.team2Points)})
                 </span>
               )}
             </div>
           ))}
           {isTiebreak && (
-            <span className="ml-2 text-xs text-muted-foreground">TIEBREAK</span>
+            <span className="ml-1 md:ml-2 text-[10px] md:text-xs text-muted-foreground">
+              TIEBREAK
+            </span>
           )}
         </div>
       </div>
 
       {/* Scoreboard */}
-      <div className="flex min-h-screen">
+      <div className="flex flex-1 flex-col md:flex-row">
         {/* Team 1 */}
-        <div className="flex flex-1 flex-col items-center justify-between bg-secondary/30 p-4 md:p-8">
-          <div className="text-center">
-            <p className="text-lg font-medium md:text-2xl">
-              {match.team1.player1.name}
-            </p>
-            <p className="text-lg font-medium md:text-2xl">
-              {match.team1.player2.name}
-            </p>
+        <div className="flex flex-1 flex-col items-center justify-between bg-secondary/30 p-4 pt-14 md:p-8 md:pt-8">
+          <div className="text-center space-y-1">
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-base md:text-2xl font-medium">
+                {match.team1.player1.name}
+              </p>
+              {servingInfo?.team === 1 && servingInfo.playerIndex === 0 && (
+                <TennisBall className="h-5 w-5 md:h-6 md:w-6 animate-pulse" />
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-base md:text-2xl font-medium">
+                {match.team1.player2.name}
+              </p>
+              {servingInfo?.team === 1 && servingInfo.playerIndex === 1 && (
+                <TennisBall className="h-5 w-5 md:h-6 md:w-6 animate-pulse" />
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-2xl font-light text-muted-foreground md:text-4xl">
+          <div className="flex flex-col items-center gap-2 md:gap-4">
+            <p className="text-xl md:text-4xl font-light text-muted-foreground">
               {currentSet.team1Games}
             </p>
-            <p className="text-8xl font-bold md:text-[12rem]">
+            <p className="text-6xl md:text-[12rem] font-bold leading-none">
               {isTiebreak ? team1Points : pointsToDisplay(team1Points)}
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             <Button
               variant="outline"
               size="lg"
               onClick={() => subtractPoint(1)}
               disabled={match.status === "finished"}
-              className="h-16 w-16 rounded-full text-2xl"
+              className="h-12 w-12 md:h-16 md:w-16 rounded-full"
             >
-              <Minus className="h-8 w-8" />
+              <Minus className="h-5 w-5 md:h-8 md:w-8" />
             </Button>
             <Button
               size="lg"
               onClick={() => addPoint(1)}
               disabled={match.status === "finished"}
-              className="h-20 w-20 rounded-full text-3xl"
+              className="h-14 w-14 md:h-20 md:w-20 rounded-full"
             >
-              <Plus className="h-10 w-10" />
+              <Plus className="h-6 w-6 md:h-10 md:w-10" />
             </Button>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-px bg-border" />
+        <div className="h-px w-full bg-border md:h-auto md:w-px" />
 
         {/* Team 2 */}
-        <div className="flex flex-1 flex-col items-center justify-between bg-secondary/10 p-4 md:p-8">
-          <div className="text-center">
-            <p className="text-lg font-medium md:text-2xl">
-              {match.team2.player1.name}
-            </p>
-            <p className="text-lg font-medium md:text-2xl">
-              {match.team2.player2.name}
-            </p>
+        <div className="flex flex-1 flex-col items-center justify-between bg-secondary/10 p-4 pb-8 md:p-8">
+          <div className="text-center space-y-1">
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-base md:text-2xl font-medium">
+                {match.team2.player1.name}
+              </p>
+              {servingInfo?.team === 2 && servingInfo.playerIndex === 0 && (
+                <TennisBall className="h-5 w-5 md:h-6 md:w-6 animate-pulse" />
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-base md:text-2xl font-medium">
+                {match.team2.player2.name}
+              </p>
+              {servingInfo?.team === 2 && servingInfo.playerIndex === 1 && (
+                <TennisBall className="h-5 w-5 md:h-6 md:w-6 animate-pulse" />
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-2xl font-light text-muted-foreground md:text-4xl">
+          <div className="flex flex-col items-center gap-2 md:gap-4">
+            <p className="text-xl md:text-4xl font-light text-muted-foreground">
               {currentSet.team2Games}
             </p>
-            <p className="text-8xl font-bold md:text-[12rem]">
+            <p className="text-6xl md:text-[12rem] font-bold leading-none">
               {isTiebreak ? team2Points : pointsToDisplay(team2Points)}
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             <Button
               variant="outline"
               size="lg"
               onClick={() => subtractPoint(2)}
               disabled={match.status === "finished"}
-              className="h-16 w-16 rounded-full text-2xl"
+              className="h-12 w-12 md:h-16 md:w-16 rounded-full"
             >
-              <Minus className="h-8 w-8" />
+              <Minus className="h-5 w-5 md:h-8 md:w-8" />
             </Button>
             <Button
               size="lg"
               onClick={() => addPoint(2)}
               disabled={match.status === "finished"}
-              className="h-20 w-20 rounded-full text-3xl"
+              className="h-14 w-14 md:h-20 md:w-20 rounded-full"
             >
-              <Plus className="h-10 w-10" />
+              <Plus className="h-6 w-6 md:h-10 md:w-10" />
             </Button>
           </div>
         </div>
@@ -453,7 +580,7 @@ export default function ScoreboardPage({
 
       {/* Finish Dialog */}
       <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Partido Terminado</DialogTitle>
           </DialogHeader>
@@ -481,11 +608,17 @@ export default function ScoreboardPage({
                 .join(" ")}
             </p>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={handleDiscardResult}>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={handleDiscardResult}
+              className="w-full sm:w-auto"
+            >
               Descartar
             </Button>
-            <Button onClick={handleSaveResult}>Guardar Resultado</Button>
+            <Button onClick={handleSaveResult} className="w-full sm:w-auto">
+              Guardar Resultado
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

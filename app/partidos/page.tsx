@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Match } from "@/lib/types";
+import { Match, RegisteredPlayer } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, ArrowLeft, Check, X } from "lucide-react";
 import Link from "next/link";
 
 function formatResult(match: Match): string {
@@ -48,9 +48,150 @@ function getWinnerName(match: Match): string {
   return `${team.player1.name} / ${team.player2.name}`;
 }
 
+interface PlayerSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+  players: RegisteredPlayer[];
+  onCreatePlayer: (name: string) => Promise<void>;
+  placeholder?: string;
+  selectedPlayers: string[];
+}
+
+function PlayerSelector({
+  value,
+  onChange,
+  players,
+  onCreatePlayer,
+  placeholder = "Buscar jugador...",
+  selectedPlayers,
+}: PlayerSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filteredPlayers = players.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) &&
+      !selectedPlayers.includes(p.name)
+  );
+
+  const exactMatch = players.find(
+    (p) => p.name.toLowerCase() === search.toLowerCase()
+  );
+
+  const showCreateOption =
+    search.trim() !== "" &&
+    !exactMatch &&
+    !selectedPlayers.includes(search.trim());
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleCreatePlayer() {
+    if (!search.trim() || isCreating) return;
+    setIsCreating(true);
+    try {
+      await onCreatePlayer(search.trim());
+      onChange(search.trim());
+      setSearch("");
+      setIsOpen(false);
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  function handleSelectPlayer(name: string) {
+    onChange(name);
+    setSearch("");
+    setIsOpen(false);
+  }
+
+  function handleClear() {
+    onChange("");
+    setSearch("");
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={value || search}
+          onChange={(e) => {
+            if (value) {
+              onChange("");
+            }
+            setSearch(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder={placeholder}
+          className="pr-8"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      {isOpen && !value && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-48 overflow-auto">
+          {filteredPlayers.length === 0 && !showCreateOption ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">
+              No se encontraron jugadores
+            </div>
+          ) : (
+            <>
+              {filteredPlayers.map((player) => (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() => handleSelectPlayer(player.name)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-secondary flex items-center gap-2"
+                >
+                  {player.name}
+                </button>
+              ))}
+              {showCreateOption && (
+                <button
+                  type="button"
+                  onClick={handleCreatePlayer}
+                  disabled={isCreating}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-secondary flex items-center gap-2 border-t text-primary"
+                >
+                  <Plus className="h-4 w-4" />
+                  {isCreating ? "Creando..." : `Crear "${search.trim()}"`}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PartidosPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<RegisteredPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,11 +199,12 @@ export default function PartidosPage() {
     team1Player2: "",
     team2Player1: "",
     team2Player2: "",
-    totalSets: 3 as 1 | 3 | 5,
+    totalSets: 1 as 1 | 3 | 5,
   });
 
   useEffect(() => {
     fetchMatches();
+    fetchPlayers();
   }, []);
 
   async function fetchMatches() {
@@ -76,6 +218,42 @@ export default function PartidosPage() {
       setIsLoading(false);
     }
   }
+
+  async function fetchPlayers() {
+    try {
+      const res = await fetch("/api/players");
+      const data = await res.json();
+      setPlayers(data);
+    } catch (error) {
+      console.error("Error fetching players:", error);
+    }
+  }
+
+  async function createPlayer(name: string) {
+    try {
+      const res = await fetch("/api/players", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const newPlayer = await res.json();
+        setPlayers((prev) => {
+          if (prev.find((p) => p.id === newPlayer.id)) return prev;
+          return [...prev, newPlayer];
+        });
+      }
+    } catch (error) {
+      console.error("Error creating player:", error);
+    }
+  }
+
+  const selectedPlayers = [
+    formData.team1Player1,
+    formData.team1Player2,
+    formData.team2Player1,
+    formData.team2Player2,
+  ].filter(Boolean);
 
   async function handleCreateMatch(e: React.FormEvent) {
     e.preventDefault();
@@ -107,7 +285,7 @@ export default function PartidosPage() {
           team1Player2: "",
           team2Player1: "",
           team2Player2: "",
-          totalSets: 3,
+          totalSets: 1,
         });
         router.push(`/partidos/${match.id}`);
       }
@@ -116,31 +294,37 @@ export default function PartidosPage() {
     }
   }
 
+  const isFormValid =
+    formData.team1Player1 &&
+    formData.team1Player2 &&
+    formData.team2Player1 &&
+    formData.team2Player2;
+
   return (
     <main className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4">
           <Link href="/">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-light tracking-tight">Partidos</h1>
+          <h1 className="text-2xl md:text-3xl font-light tracking-tight">Partidos</h1>
         </div>
 
         <Card className="border-border/50 bg-card/50 backdrop-blur">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-light">
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-lg md:text-xl font-light">
               Lista de Partidos
             </CardTitle>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
                   Iniciar Partido
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Nuevo Partido</DialogTitle>
                 </DialogHeader>
@@ -152,32 +336,26 @@ export default function PartidosPage() {
                     <div className="grid gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="team1Player1">Jugador 1</Label>
-                        <Input
-                          id="team1Player1"
+                        <PlayerSelector
                           value={formData.team1Player1}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              team1Player1: e.target.value,
-                            })
+                          onChange={(val) =>
+                            setFormData({ ...formData, team1Player1: val })
                           }
-                          placeholder="Nombre"
-                          required
+                          players={players}
+                          onCreatePlayer={createPlayer}
+                          selectedPlayers={selectedPlayers}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="team1Player2">Jugador 2</Label>
-                        <Input
-                          id="team1Player2"
+                        <PlayerSelector
                           value={formData.team1Player2}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              team1Player2: e.target.value,
-                            })
+                          onChange={(val) =>
+                            setFormData({ ...formData, team1Player2: val })
                           }
-                          placeholder="Nombre"
-                          required
+                          players={players}
+                          onCreatePlayer={createPlayer}
+                          selectedPlayers={selectedPlayers}
                         />
                       </div>
                     </div>
@@ -190,32 +368,26 @@ export default function PartidosPage() {
                     <div className="grid gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="team2Player1">Jugador 1</Label>
-                        <Input
-                          id="team2Player1"
+                        <PlayerSelector
                           value={formData.team2Player1}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              team2Player1: e.target.value,
-                            })
+                          onChange={(val) =>
+                            setFormData({ ...formData, team2Player1: val })
                           }
-                          placeholder="Nombre"
-                          required
+                          players={players}
+                          onCreatePlayer={createPlayer}
+                          selectedPlayers={selectedPlayers}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="team2Player2">Jugador 2</Label>
-                        <Input
-                          id="team2Player2"
+                        <PlayerSelector
                           value={formData.team2Player2}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              team2Player2: e.target.value,
-                            })
+                          onChange={(val) =>
+                            setFormData({ ...formData, team2Player2: val })
                           }
-                          placeholder="Nombre"
-                          required
+                          players={players}
+                          onCreatePlayer={createPlayer}
+                          selectedPlayers={selectedPlayers}
                         />
                       </div>
                     </div>
@@ -228,9 +400,16 @@ export default function PartidosPage() {
                         <Button
                           key={num}
                           type="button"
-                          variant={formData.totalSets === num ? "default" : "outline"}
+                          variant={
+                            formData.totalSets === num ? "default" : "outline"
+                          }
                           className="flex-1"
-                          onClick={() => setFormData({ ...formData, totalSets: num as 1 | 3 | 5 })}
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              totalSets: num as 1 | 3 | 5,
+                            })
+                          }
                         >
                           {num} {num === 1 ? "Set" : "Sets"}
                         </Button>
@@ -238,7 +417,11 @@ export default function PartidosPage() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={!isFormValid}
+                  >
                     Iniciar Partido
                   </Button>
                 </form>
@@ -260,8 +443,44 @@ export default function PartidosPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto -mx-4 md:mx-0">
+                {/* Mobile view */}
+                <div className="block md:hidden space-y-3 px-4">
+                  {matches.map((match) => (
+                    <Link
+                      key={match.id}
+                      href={`/partidos/${match.id}`}
+                      className="block"
+                    >
+                      <div className="rounded-lg border bg-card p-4 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <p className="font-medium text-sm">
+                              {match.team1.player1.name} /{" "}
+                              {match.team1.player2.name}
+                            </p>
+                            <p className="text-muted-foreground text-sm">vs</p>
+                            <p className="font-medium text-sm">
+                              {match.team2.player1.name} /{" "}
+                              {match.team2.player2.name}
+                            </p>
+                          </div>
+                          <span className="font-mono text-sm">
+                            {formatResult(match)}
+                          </span>
+                        </div>
+                        {match.winner && (
+                          <p className="text-xs text-primary">
+                            Ganador: {getWinnerName(match)}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Desktop view */}
+                <Table className="hidden md:table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Pareja 1</TableHead>

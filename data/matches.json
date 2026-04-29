@@ -43,6 +43,41 @@
       },
       "status": "in-progress",
       "createdAt": "2026-04-29T14:28:32.550Z"
+    },
+    {
+      "id": "87f810b0-e0a3-4965-81bd-8ae5d4bd5de7",
+      "team1": {
+        "player1": {
+          "name": "Aldo"
+        },
+        "player2": {
+          "name": "Leo Rozin"
+        }
+      },
+      "team2": {
+        "player1": {
+          "name": "Andy"
+        },
+        "player2": {
+          "name": "Leo Mirkin"
+        }
+      },
+      "sets": [
+        {
+          "team1Games": 5,
+          "team2Games": 0
+        }
+      ],
+      "currentSet": 0,
+      "totalSets": 1,
+      "currentGame": {
+        "team1Points": 3,
+        "team2Points": 0
+      },
+      "status": "finished",
+      "createdAt": "2026-04-29T14:38:59.430Z",
+      "winner": 1,
+      "finishedAt": "2026-04-29T14:39:20.303Z"
     }
   ]
 }

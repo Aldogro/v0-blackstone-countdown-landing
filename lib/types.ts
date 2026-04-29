@@ -1,5 +1,16 @@
 export interface Player {
+  id?: string;
   name: string;
+}
+
+export interface RegisteredPlayer {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface PlayersData {
+  players: RegisteredPlayer[];
 }
 
 export interface Team {
