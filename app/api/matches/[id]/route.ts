@@ -47,7 +47,20 @@ export async function PATCH(
     return NextResponse.json({ error: "Match not found" }, { status: 404 });
   }
 
-  data.matches[matchIndex] = { ...data.matches[matchIndex], ...updates };
+  // Handle removing optional fields when they are explicitly set to undefined
+  const currentMatch = data.matches[matchIndex];
+  const updatedMatch = { ...currentMatch, ...updates };
+  
+  // If winner is explicitly undefined, remove it
+  if (updates.winner === undefined && 'winner' in updates) {
+    delete updatedMatch.winner;
+  }
+  // If finishedAt is explicitly undefined, remove it
+  if (updates.finishedAt === undefined && 'finishedAt' in updates) {
+    delete updatedMatch.finishedAt;
+  }
+  
+  data.matches[matchIndex] = updatedMatch;
   await writeMatches(data);
 
   return NextResponse.json(data.matches[matchIndex]);

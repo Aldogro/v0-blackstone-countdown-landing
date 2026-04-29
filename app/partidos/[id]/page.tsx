@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Minus, ArrowLeft } from "lucide-react";
+import { Plus, Minus, ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 
 const GAMES_TO_WIN_SET = 6;
@@ -77,6 +77,7 @@ export default function ScoreboardPage({
   const [isLoading, setIsLoading] = useState(true);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [pendingWinner, setPendingWinner] = useState<1 | 2 | null>(null);
+  const [isEditingFinished, setIsEditingFinished] = useState(false);
 
   const fetchMatch = useCallback(async () => {
     try {
@@ -218,10 +219,27 @@ export default function ScoreboardPage({
     return null;
   }
 
+  // Check if a team has already won the current set (not tiebreak scenario)
+  function isSetAlreadyWon(set: typeof match.sets[0]): boolean {
+    // Set won with 2+ game difference
+    if (set.team1Games >= GAMES_TO_WIN_SET && set.team1Games - set.team2Games >= 2) return true;
+    if (set.team2Games >= GAMES_TO_WIN_SET && set.team2Games - set.team1Games >= 2) return true;
+    // Tiebreak won
+    if (set.team1Games === 7 || set.team2Games === 7) return true;
+    return false;
+  }
+
   function addPoint(team: 1 | 2) {
-    if (!match || match.status === "finished") return;
+    if (!match) return;
+    
+    // Allow editing finished matches, but prevent adding points after modal is shown
+    if (showFinishDialog) return;
 
     const currentSet = match.sets[match.currentSet];
+    
+    // Prevent adding points if set is already won (edge case protection)
+    if (isSetAlreadyWon(currentSet)) return;
+    
     const isTiebreak =
       currentSet.team1Games === 6 && currentSet.team2Games === 6;
 
@@ -373,7 +391,10 @@ export default function ScoreboardPage({
   }
 
   function subtractPoint(team: 1 | 2) {
-    if (!match || match.status === "finished") return;
+    if (!match) return;
+    
+    // Allow editing finished matches, but prevent subtracting if modal is shown
+    if (showFinishDialog) return;
 
     const currentSet = match.sets[match.currentSet];
     const isTiebreak = currentSet.tiebreak !== undefined;
@@ -451,12 +472,31 @@ export default function ScoreboardPage({
     });
 
     setShowFinishDialog(false);
+    setIsEditingFinished(false);
     router.push("/partidos");
   }
 
   function handleDiscardResult() {
+    // If editing a finished match, go back to list
+    if (isEditingFinished) {
+      router.push("/partidos");
+      return;
+    }
     setShowFinishDialog(false);
     setPendingWinner(null);
+  }
+  
+  async function reopenMatch() {
+    if (!match || match.status !== "finished") return;
+    
+    setIsEditingFinished(true);
+    
+    // Reopen the match for editing
+    await updateMatch({
+      status: "in-progress",
+      winner: undefined,
+      finishedAt: undefined,
+    });
   }
 
   if (isLoading) {
@@ -501,6 +541,21 @@ export default function ScoreboardPage({
           </Button>
         </Link>
       </div>
+      
+      {/* Edit button for finished matches */}
+      {match.status === "finished" && !isEditingFinished && (
+        <div className="absolute right-2 top-2 z-10 md:right-4 md:top-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={reopenMatch}
+            className="gap-2"
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="hidden sm:inline">Editar</span>
+          </Button>
+        </div>
+      )}
 
       {/* Sets display */}
       <div className="absolute left-1/2 top-2 z-10 -translate-x-1/2 md:top-4">
@@ -567,7 +622,7 @@ export default function ScoreboardPage({
               variant="outline"
               size="lg"
               onClick={() => subtractPoint(1)}
-              disabled={match.status === "finished"}
+              disabled={showFinishDialog}
               className="h-12 w-12 md:h-16 md:w-16 rounded-full"
             >
               <Minus className="h-5 w-5 md:h-8 md:w-8" />
@@ -575,7 +630,7 @@ export default function ScoreboardPage({
             <Button
               size="lg"
               onClick={() => addPoint(1)}
-              disabled={match.status === "finished"}
+              disabled={showFinishDialog}
               className="h-14 w-14 md:h-20 md:w-20 rounded-full"
             >
               <Plus className="h-6 w-6 md:h-10 md:w-10" />
@@ -621,7 +676,7 @@ export default function ScoreboardPage({
               variant="outline"
               size="lg"
               onClick={() => subtractPoint(2)}
-              disabled={match.status === "finished"}
+              disabled={showFinishDialog}
               className="h-12 w-12 md:h-16 md:w-16 rounded-full"
             >
               <Minus className="h-5 w-5 md:h-8 md:w-8" />
@@ -629,7 +684,7 @@ export default function ScoreboardPage({
             <Button
               size="lg"
               onClick={() => addPoint(2)}
-              disabled={match.status === "finished"}
+              disabled={showFinishDialog}
               className="h-14 w-14 md:h-20 md:w-20 rounded-full"
             >
               <Plus className="h-6 w-6 md:h-10 md:w-10" />
@@ -638,9 +693,9 @@ export default function ScoreboardPage({
         </div>
       </div>
 
-      {/* Finish Dialog */}
-      <Dialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
-        <DialogContent className="max-w-[90vw] sm:max-w-md">
+      {/* Finish Dialog - Not dismissable */}
+      <Dialog open={showFinishDialog}>
+        <DialogContent className="max-w-[90vw] sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Partido Terminado</DialogTitle>
           </DialogHeader>
