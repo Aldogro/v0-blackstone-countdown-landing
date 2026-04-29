@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { PlayersData, RegisteredPlayer } from '@/lib/types';
 import { redis } from '@/lib/redis';
 
-const KEY = 'players';
+export const KEY = 'players';
 
 async function getPlayersData(): Promise<PlayersData> {
   try {

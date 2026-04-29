@@ -39,7 +39,13 @@ export default function Home() {
           </Button>
           <div className="w-16 h-1 bg-primary mx-auto my-4" />
           <Button variant="outline" className="gap-2">
-            <Link href="/partidos">
+            <Link href="/jugadores">
+              Jugadores
+            </Link>
+          </Button>
+          <div className="w-16 h-1 bg-primary mx-auto my-4" />
+          <Button variant="outline" className="gap-2">
+            <Link href="/bpt">
               Ver Puntos BPT
             </Link>
           </Button>

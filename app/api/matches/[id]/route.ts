@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { redis } from '@/lib/redis';
 import { MatchesData } from "@/lib/types";
+import { KEY } from "../route";
 
 async function readMatches(): Promise<MatchesData> {
   try {
-    const data = await redis.get('matches') as MatchesData;
+    const data = await redis.get(KEY) as MatchesData;
     return data;
   } catch {
     return { matches: [] };
@@ -12,7 +13,7 @@ async function readMatches(): Promise<MatchesData> {
 }
 
 async function writeMatches(data: MatchesData): Promise<void> {
-  await redis.set('matches', data);
+  await redis.set(KEY, data);
 }
 
 export async function GET(

@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, ArrowLeft, Check, X, Trophy } from "lucide-react";
+import { Plus, Pencil, ArrowLeft, X, Trophy, Trash, Users } from "lucide-react";
 import Link from "next/link";
 
 function formatResult(match: Match): string {
@@ -220,6 +220,21 @@ export default function PartidosPage() {
     }
   }
 
+  async function handleDeleteMatch(id: string) {
+    if (confirm('¿Estás seguro de querer eliminar este partido?')) {
+      try {
+        const res = await fetch(`/api/matches/${id}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          fetchMatches();
+        }
+      } catch (error) {
+        console.error('Error deleting match:', error);
+      }
+    }
+  }
+
   async function fetchPlayers() {
     try {
       const res = await fetch('/api/players');
@@ -233,9 +248,9 @@ export default function PartidosPage() {
 
   async function createPlayer(name: string) {
     try {
-      const res = await fetch("/api/players", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
       if (res.ok) {
@@ -246,7 +261,7 @@ export default function PartidosPage() {
         });
       }
     } catch (error) {
-      console.error("Error creating player:", error);
+      console.error('Error creating player:', error);
     }
   }
 
@@ -314,6 +329,13 @@ export default function PartidosPage() {
             </Link>
             <h1 className="text-2xl md:text-3xl font-light tracking-tight">Partidos</h1>
           </div>
+          <Link href="/jugadores">
+            <Button variant="outline" className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Jugadores</span>
+              <span className="sm:hidden">Jugadores</span>
+            </Button>
+          </Link>
           <Link href="/bpt">
             <Button variant="outline" className="gap-2">
               <Trophy className="h-4 w-4" />
@@ -538,6 +560,9 @@ export default function PartidosPage() {
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </Link>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteMatch(match.id)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
