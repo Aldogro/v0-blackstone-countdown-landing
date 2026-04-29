@@ -117,7 +117,7 @@ export default function ScoreboardPage({
 
   // Calculate who is serving
   // In regular games: service alternates every game
-  // In tiebreak: service alternates every 2 points after the first point
+  // In tiebreak: Team1 serves 1 point, then Team2 serves 2, Team1 serves 2, etc.
   function getServingTeamAndPlayer(): { team: 1 | 2; playerIndex: 0 | 1 } | null {
     if (!match || match.status === "finished") return null;
 
@@ -132,27 +132,45 @@ export default function ScoreboardPage({
       currentSet.team1Games === 6 && currentSet.team2Games === 6;
 
     if (isTiebreak && currentSet.tiebreak) {
-      // Tiebreak serving logic
-      // First point: server determined by rotation
-      // Then alternates every 2 points
+      // Tiebreak serving logic:
+      // Point 0: Team A serves (1 serve)
+      // Points 1-2: Team B serves (2 serves)
+      // Points 3-4: Team A serves (2 serves)
+      // Points 5-6: Team B serves (2 serves)
+      // etc.
       const tiebreakPoints =
         currentSet.tiebreak.team1Points + currentSet.tiebreak.team2Points;
 
       // Determine initial server based on game rotation
       const initialServerTeam: 1 | 2 = totalGamesInMatch % 2 === 0 ? 1 : 2;
+      const otherTeam: 1 | 2 = initialServerTeam === 1 ? 2 : 1;
 
-      // In tiebreak, after first point, service changes every 2 points
       let servingTeam: 1 | 2;
+      let serveBlockForPlayer: number;
+      
       if (tiebreakPoints === 0) {
+        // First point - initial server
         servingTeam = initialServerTeam;
+        serveBlockForPlayer = 0;
       } else {
-        // After first point, alternate every 2 points
-        const serveBlock = Math.floor((tiebreakPoints + 1) / 2);
-        servingTeam = serveBlock % 2 === 0 ? initialServerTeam : (initialServerTeam === 1 ? 2 : 1);
+        // After first point, service changes in blocks of 2
+        // Points 1-2: other team, Points 3-4: initial team, Points 5-6: other team, etc.
+        const adjustedPoints = tiebreakPoints - 1; // Offset by 1 for the first serve
+        const serveBlock = Math.floor(adjustedPoints / 2);
+        servingTeam = serveBlock % 2 === 0 ? otherTeam : initialServerTeam;
+        
+        // Calculate serve block for player rotation within team
+        // Initial team serves at blocks: 0 (point 0), 2 (points 3-4), 4 (points 7-8), etc.
+        // Other team serves at blocks: 1 (points 1-2), 3 (points 5-6), etc.
+        if (servingTeam === initialServerTeam) {
+          serveBlockForPlayer = tiebreakPoints === 0 ? 0 : Math.floor((serveBlock + 1) / 2);
+        } else {
+          serveBlockForPlayer = Math.floor(serveBlock / 2);
+        }
       }
 
-      // Alternate players within the team
-      const playerIndex: 0 | 1 = (Math.floor(tiebreakPoints / 2) % 2) as 0 | 1;
+      // Alternate players within the team based on how many serve blocks they've had
+      const playerIndex: 0 | 1 = (serveBlockForPlayer % 2) as 0 | 1;
 
       return { team: servingTeam, playerIndex };
     } else {

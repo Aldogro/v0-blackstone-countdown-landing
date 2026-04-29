@@ -78,6 +78,43 @@
       "createdAt": "2026-04-29T14:38:59.430Z",
       "winner": 1,
       "finishedAt": "2026-04-29T14:39:20.303Z"
+    },
+    {
+      "id": "8236ea05-1c0b-464d-9b4c-c27f98023ba0",
+      "team1": {
+        "player1": {
+          "name": "Aldo"
+        },
+        "player2": {
+          "name": "Leo Rozin"
+        }
+      },
+      "team2": {
+        "player1": {
+          "name": "Leo Mirkin"
+        },
+        "player2": {
+          "name": "Andy"
+        }
+      },
+      "sets": [
+        {
+          "team1Games": 6,
+          "team2Games": 6,
+          "tiebreak": {
+            "team1Points": 1,
+            "team2Points": 2
+          }
+        }
+      ],
+      "currentSet": 0,
+      "totalSets": 1,
+      "currentGame": {
+        "team1Points": 0,
+        "team2Points": 0
+      },
+      "status": "in-progress",
+      "createdAt": "2026-04-29T14:47:59.800Z"
     }
   ]
 }
