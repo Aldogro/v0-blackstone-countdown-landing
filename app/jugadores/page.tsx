@@ -185,7 +185,7 @@ export default function JugadoresPage() {
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
                             <p className="font-medium text-sm">
-                                {player.name}
+                                {player.name} {player.alias && `"${player.alias}"`}
                             </p>
                             <span className="flex items-center gap-1">
                               <Star className="h-4 w-4" />
@@ -210,6 +210,7 @@ export default function JugadoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
+                      <TableHead>Alias</TableHead>
                       <TableHead>Calificación</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
@@ -220,6 +221,11 @@ export default function JugadoresPage() {
                         <TableCell>
                           <div className="font-medium">
                             {player.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">
+                            {player.alias}
                           </div>
                         </TableCell>
                         <TableCell>
