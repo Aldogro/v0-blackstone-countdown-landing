@@ -22,8 +22,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, ArrowLeft, X, Trophy, Trash, Users } from "lucide-react";
+import { Plus, Pencil, ArrowLeft, X, Trophy, Trash, Users, Star } from "lucide-react";
 import Link from "next/link";
+import { getPlayerRating } from "../jugadores/page";
 
 function formatResult(match: Match): string {
   if (match.sets.length === 0) return "-";
@@ -62,7 +63,6 @@ function PlayerSelector({
   onChange,
   players,
   onCreatePlayer,
-  placeholder = "Buscar jugador...",
   selectedPlayers,
 }: PlayerSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -137,7 +137,6 @@ function PlayerSelector({
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
           className="pr-8"
         />
         {value && (
@@ -166,7 +165,8 @@ function PlayerSelector({
                   onClick={() => handleSelectPlayer(player.name)}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-secondary flex items-center gap-2"
                 >
-                  {player.name}
+                  {player.name} {player.alias && `(${player.alias})`}<span><Star className="h-4 w-4" /></span>
+                  {getPlayerRating(player)}
                 </button>
               ))}
               {showCreateOption && (

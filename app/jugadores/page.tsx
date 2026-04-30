@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { RegisteredPlayer } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +20,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ArrowLeft, Trophy, Trash, Pencil } from "lucide-react";
+import { Plus, ArrowLeft, Trophy, Trash, Pencil, Star } from "lucide-react";
 import Link from "next/link";
 import TennisBall from "@/components/ui/tennis-ball";
 
+export const getPlayerRating = (player: RegisteredPlayer) => {
+  const sum = (player.serve || 0) + (player.forehand || 0) + (player.backhand || 0) + (player.forehandVolley || 0) + (player.backhandVolley || 0) + (player.wallExit || 0) + (player.bandeja || 0) + (player.vibora || 0) + (player.footwork || 0) + (player.stamina || 0) + (player.focus || 0);
+  return Math.round(sum / 11);
+};
+
 export default function JugadoresPage() {
-  const router = useRouter();
   const [players, setPlayers] = useState<RegisteredPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -178,17 +181,27 @@ export default function JugadoresPage() {
                 {/* Mobile view */}
                 <div className="block md:hidden space-y-3 px-4">
                   {players.map((player) => (
-                    <div key={player.id} className="rounded-lg border bg-card p-4 space-y-2">
-                    <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                        <p className="font-medium text-sm">
-                            {player.name}
-                        </p>
+                      <div key={player.id} className="rounded-lg border bg-card p-4 space-y-2">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                            <p className="font-medium text-sm">
+                                {player.name}
+                            </p>
+                            <span className="flex items-center gap-1">
+                              <Star className="h-4 w-4" />
+                              {getPlayerRating(player)}
+                            </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Link href={`/jugadores/${player.id}`}>
+                                <Pencil className="h-4 w-4" />
+                              </Link>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(player.id)}>
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
                         </div>
-                        <span className="font-mono text-sm">
-                        </span>
-                    </div>
-                    </div>
+                      </div>
                   ))}
                 </div>
 
@@ -197,6 +210,7 @@ export default function JugadoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
+                      <TableHead>Calificación</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -206,6 +220,12 @@ export default function JugadoresPage() {
                         <TableCell>
                           <div className="font-medium">
                             {player.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4" />
+                            {getPlayerRating(player)}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">

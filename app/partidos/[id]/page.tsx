@@ -492,7 +492,7 @@ export default function ScoreboardPage({
   const servingInfo = getServingTeamAndPlayer();
 
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <main className="min-h-[90vh] bg-background flex flex-col md:min-h-screen md:h-[90vh]">
       {/* Header */}
       <div className="absolute left-2 top-2 z-10 md:left-4 md:top-4">
         <Link href="/partidos">
