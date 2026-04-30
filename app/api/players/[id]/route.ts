@@ -17,6 +17,39 @@ async function writePlayers(data: PlayersData): Promise<void> {
   await redis.set(KEY, data);
 }
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const data = await readPlayers();
+  const player = data.players.find((p) => p.id === id);
+
+  if (!player) {
+    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(player);
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const data = await readPlayers();
+  const player = data.players.find((p) => p.id === id);
+
+  if (!player) {
+    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+  }
+
+  const updates = await request.json();
+  const updatedPlayer = { ...player, ...updates };
+  await writePlayers({ ...data, players: data.players.map((p) => p.id === id ? updatedPlayer : p) });
+  return NextResponse.json(updatedPlayer);
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ArrowLeft, Trophy, Trash } from "lucide-react";
+import { Plus, ArrowLeft, Trophy, Trash, Pencil } from "lucide-react";
 import Link from "next/link";
 import TennisBall from "@/components/ui/tennis-ball";
 
@@ -209,6 +209,11 @@ export default function JugadoresPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
+                        <Link href={`/jugadores/${player.id}`}>
+                            <Button variant="ghost" size="icon">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </Link>
                           <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(player.id)}>
                             <Trash className="h-4 w-4" />
                           </Button>

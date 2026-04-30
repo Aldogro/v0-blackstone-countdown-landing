@@ -6,6 +6,21 @@ export interface Player {
 export interface RegisteredPlayer {
   id: string;
   name: string;
+  alias?: string;
+  description?: string;
+  serve?: number;
+  forehand?: number;
+  backhand?: number;
+  forehandVolley?: number;
+  backhandVolley?: number;
+  wallExit?: number;
+  bandeja?: number;
+  vibora?: number;
+  footwork?: number;
+  stamina?: number;
+  focus?: number;
+  overall?: number;
+  image?: string;
   createdAt: string;
 }
 
