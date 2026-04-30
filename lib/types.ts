@@ -13,6 +13,7 @@ export interface RegisteredPlayer {
   backhand?: number;
   forehandVolley?: number;
   backhandVolley?: number;
+  globo?: number;
   wallExit?: number;
   bandeja?: number;
   vibora?: number;

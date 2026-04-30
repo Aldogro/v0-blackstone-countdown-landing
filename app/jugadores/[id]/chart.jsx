@@ -26,6 +26,7 @@ const Chart = ({ data }) => {
         backhand,
         forehandVolley,
         backhandVolley,
+        lob,
         wallExit,
         bandeja,
         vibora,
@@ -33,7 +34,7 @@ const Chart = ({ data }) => {
         stamina,
         focus,
     } = data;
-    const sortedData = [serve, forehand, backhand, forehandVolley, backhandVolley, wallExit, bandeja, vibora, footwork, stamina, focus];
+    const sortedData = [serve, forehand, backhand, forehandVolley, backhandVolley, lob, wallExit, bandeja, vibora, footwork, stamina, focus];
 
   return (
     // full with if mobile hidden if desktop tailwind
@@ -46,6 +47,7 @@ const Chart = ({ data }) => {
                 'Revés',
                 'Volea Drive',
                 'Volea Revés',
+                'Globo',
                 'Salida de pared',
                 'Bandeja',
                 'Víbora',

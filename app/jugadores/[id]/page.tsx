@@ -24,6 +24,7 @@ const JugadorPage = ({ params }: { params: Promise<{ id: string }> }) => {
       backhand: 0,
       forehandVolley: 0,
       backhandVolley: 0,
+      lob: 0,
       wallExit: 0,
       bandeja: 0,
       vibora: 0,
@@ -117,7 +118,7 @@ const JugadorPage = ({ params }: { params: Promise<{ id: string }> }) => {
                                     onChange={handleTextChange}
                                     placeholder="Descripción"
                                 />
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     <Input
                                         name="serve"
                                         type="number"
@@ -166,6 +167,16 @@ const JugadorPage = ({ params }: { params: Promise<{ id: string }> }) => {
                                         value={formData.backhandVolley}
                                         onChange={handleNumberChange}
                                         placeholder="Volea Revés"
+                                    />
+                                    <Input
+                                        id="lob"
+                                        name="lob"
+                                        type="number"
+                                        min={0}
+                                        max={10}
+                                        value={formData.lob}
+                                        onChange={handleNumberChange}
+                                        placeholder="Globo"
                                     />
                                     <Input
                                         id="wallExit"
