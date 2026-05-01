@@ -191,6 +191,9 @@ const JugadorPage = ({ params }: { params: Promise<{ id: string }> }) => {
                                     <Input
                                         id="bandeja"
                                         name="bandeja"
+                                        type="number"
+                                        min={0}
+                                        max={10}
                                         value={formData.bandeja}
                                         onChange={handleNumberChange}
                                         placeholder="Bandeja"
